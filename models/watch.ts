@@ -12,14 +12,16 @@ const WatchSchema = new Schema(
     watchLink: { type: String, default: "" },
     watchName: { type: String, required: true },
     watchServer: {
-      type: [new Schema({
-        serverRef: {
-          type: Schema.Types.ObjectId,
-          ref: "server",
-          required: true,
-        },
-        serverPlayer: { type: String, default: "" },
-      })],
+      type: [
+        new Schema({
+          serverRef: {
+            type: Schema.Types.ObjectId,
+            ref: "server",
+            required: true,
+          },
+          serverPlayer: { type: String, default: "" },
+        }),
+      ],
       default: [],
     },
   },

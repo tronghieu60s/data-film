@@ -1,6 +1,7 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, Page } from "puppeteer";
 import GroupModel from "../../models/group";
 import PostModel from "../../models/post";
+import ServerModel from "../../models/server";
 import StalkModel from "../../models/stalk";
 import WatchModel from "../../models/watch";
 
@@ -11,8 +12,9 @@ export default async function main() {
 
   const browser = await puppeteer.launch({ headless: false });
 
-  await getNewData(browser);
-  await getPostData(browser);
+  // await getNewData(browser);
+  // await getPostData(browser);
+  await getWatchData(browser);
 
   // await browser.close();
 }
@@ -110,16 +112,14 @@ async function getPostData(browser: Browser) {
   console.log("Đang lấy dữ liệu bài viết...");
   const page = await browser.newPage();
 
-  const postData = await PostModel.find(
-    { type, isUpdate: true },
-    {},
-    { sort: { postId: "asc" } }
-  ).populate("watchRef");
+  const postData = await PostModel.find({ type, isUpdate: true }).populate(
+    "watchRef"
+  );
 
   for (const postItem of postData) {
     const { type, stalk: stalkId, postId, postLink } = postItem;
 
-    if (!postLink) return;
+    if (!postLink) continue;
     await page.goto(postLink);
 
     if (await page.$(".ah_404")) continue;
@@ -288,9 +288,104 @@ async function getPostData(browser: Browser) {
     updated.isUpdate = true;
     await updated.save();
   }
+
+  await page.close();
 }
 
-async function getWatchData(browser: Browser, watch: string) {
+async function getWatchData(browser: Browser) {
   console.log("Đang lấy dữ liệu xem phim...");
   const page = await browser.newPage();
+
+  const watchData = await WatchModel.find({ type, isUpdate: true });
+
+  for (const watchItem of watchData) {
+    const { watchLink } = watchItem;
+
+    if (!watchLink) continue;
+    await page.goto(watchLink, { timeout: 0, waitUntil: "domcontentloaded" });
+    await new Promise((r) => setTimeout(r, 500));
+
+    if (await page.$(".ah_404")) continue;
+    if (await page.$("#count-second-unlock")) continue;
+
+    /* Server VPRO */
+    const svVpx = await page.evaluate(() => {
+      const svVpx = document.querySelector("#sv_VPRO") as HTMLElement;
+      if (svVpx) svVpx.click();
+      return svVpx ? true : false;
+    });
+    if (svVpx) {
+      const server = await ServerModel.findOneAndUpdate(
+        { serverName: "VPX" },
+        { serverType: "embed", serverName: "VPX" },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      const serverPlayer = await getWatchVideoHls(
+        page,
+        "https://suckplayer.xyz/video/",
+        () =>
+          page.evaluate(() => {
+            const svVpx = document.querySelector("#sv_VPRO") as HTMLElement;
+            svVpx?.click();
+          })
+      );
+
+      const watchVpx = { serverRef: server._id, serverPlayer };
+
+      const findIndex = watchItem.watchServer.findIndex((item: any) =>
+        item.serverRef.equals(server._id)
+      );
+      if (findIndex > -1) watchItem.watchServer[findIndex] = watchVpx;
+      else watchItem.watchServer.push(watchVpx);
+    }
+
+    /* Server Hydrax */
+    const svHydrax = await page.evaluate(() => {
+      const svHydrax = document.querySelector("#sv_Hydrax") as HTMLElement;
+      if (svHydrax) svHydrax.click();
+      return svHydrax ? true : false;
+    });
+    if (svHydrax) {
+      const server = await ServerModel.findOneAndUpdate(
+        { serverName: "HDX" },
+        { serverType: "embed", serverName: "HDX" },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      const serverPlayer = await page.evaluate(() => {
+        const player = document.querySelector(
+          "#video-player iframe"
+        ) as HTMLIFrameElement;
+        return player?.src || "";
+      });
+
+      const watchHydrax = { serverRef: server._id, serverPlayer };
+
+      const findIndex = watchItem.watchServer.findIndex((item: any) =>
+        item.serverRef.equals(server._id)
+      );
+      if (findIndex > -1) watchItem.watchServer[findIndex] = watchHydrax;
+      else watchItem.watchServer.push(watchHydrax);
+    }
+
+    watchItem.isUpdate = false;
+    await watchItem.save();
+  }
+
+  await page.close();
+}
+
+async function getWatchVideoHls(
+  page: Page,
+  prefix: string,
+  callback?: Function
+): Promise<string> {
+  return new Promise(async (resolve) => {
+    page.on(
+      "response",
+      async (response) =>
+        response.url().includes(prefix) && resolve(response.url())
+    );
+    await callback?.();
+    setTimeout(() => resolve(""), 2000);
+  });
 }

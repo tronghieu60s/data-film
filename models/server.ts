@@ -4,8 +4,8 @@ const Schema = mongoose.Schema;
 
 const ServerSchema = new Schema(
   {
+    serverHome: { type: String, default: "" },
     serverName: { type: String, required: true },
-    serverPrefix: { type: String, default: "" },
     serverType: { type: String, enum: ["link", "embed"], default: "link" },
   },
   {
