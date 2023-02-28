@@ -46,7 +46,7 @@ async function getNewData(browser: Browser) {
             stalkItem.querySelector(".name-movie") as HTMLElement
           )?.innerText.trim() || "";
         const stalkImage = stalkItem.querySelector("img")?.src || "";
-        const stalkDiff =
+        const stalkDifferent =
           (stalkItem.querySelector(".episode-latest") as HTMLElement)
             ?.innerText || "";
 
@@ -55,7 +55,7 @@ async function getNewData(browser: Browser) {
           stalkLink,
           stalkName,
           stalkImage,
-          stalkDiff,
+          stalkDifferent,
         };
       });
     });
@@ -71,7 +71,7 @@ async function getNewData(browser: Browser) {
           { ...stalkItem },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
-        if (stalk?.stalkDiff === stalkUd?.stalkDiff) {
+        if (stalk?.stalkDifferent === stalkUd?.stalkDifferent) {
           isEnd = true;
           return stalkUd;
         }

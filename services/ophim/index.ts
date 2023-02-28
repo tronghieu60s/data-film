@@ -36,7 +36,7 @@ async function getNewData() {
       stalkLink: `https://ophim1.com/phim/${item?.slug}`,
       stalkName: item?.name,
       stalkImage: item?.thumb_url,
-      stalkDiff: item?.modified?.time,
+      stalkDifferent: item?.modified?.time,
     }));
 
     await Promise.all(
@@ -50,7 +50,7 @@ async function getNewData() {
           { ...stalkItem },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
-        if (stalk?.stalkDiff === stalkUd?.stalkDiff) {
+        if (stalk?.stalkDifferent === stalkUd?.stalkDifferent) {
           isEnd = true;
           return stalkUd;
         }
