@@ -19,6 +19,7 @@ const WatchSchema = new Schema(
             ref: "server",
             required: true,
           },
+          serverM3u8: { type: String, default: "" },
           serverPlayer: { type: String, default: "" },
         }),
       ],

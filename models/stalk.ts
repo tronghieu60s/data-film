@@ -12,8 +12,7 @@ const StalkSchema = new Schema(
     stalkLink: { type: String, required: true },
     stalkName: { type: String, required: true },
     stalkImage: { type: String, default: "" },
-    stalkEpisodeTotal: { type: String, default: "" },
-    stalkEpisodeCurrent: { type: String, default: "" },
+    stalkDiff: { type: String, required: true },
   },
   {
     collection: "stalk",

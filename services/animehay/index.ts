@@ -46,27 +46,16 @@ async function getNewData(browser: Browser) {
             stalkItem.querySelector(".name-movie") as HTMLElement
           )?.innerText.trim() || "";
         const stalkImage = stalkItem.querySelector("img")?.src || "";
-        const stalkEpisode =
+        const stalkDiff =
           (stalkItem.querySelector(".episode-latest") as HTMLElement)
             ?.innerText || "";
-
-        let stalkEpisodeTotal = "";
-        let stalkEpisodeCurrent = "";
-
-        stalkEpisodeTotal = stalkEpisode.split("/")?.[1];
-        stalkEpisodeCurrent = stalkEpisode.split("/")?.[0];
-        if (stalkEpisode.toLowerCase().indexOf("phút") > -1) {
-          stalkEpisodeTotal = "1";
-          stalkEpisodeCurrent = stalkEpisode;
-        }
 
         return {
           stalkId,
           stalkLink,
           stalkName,
           stalkImage,
-          stalkEpisodeTotal,
-          stalkEpisodeCurrent,
+          stalkDiff,
         };
       });
     });
@@ -82,7 +71,7 @@ async function getNewData(browser: Browser) {
           { ...stalkItem },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
-        if (stalk?.stalkEpisodeCurrent === stalkUd?.stalkEpisodeCurrent) {
+        if (stalk?.stalkDiff === stalkUd?.stalkDiff) {
           isEnd = true;
           return stalkUd;
         }
@@ -173,7 +162,7 @@ async function getPostData(browser: Browser) {
         (document.querySelector(".desc div:nth-child(2)") as HTMLElement)
           ?.innerText || "";
 
-      let postType = "movie";
+      let postType = "single";
       let postEpisodeTotal = "1";
       if (postDuration.includes("tập")) {
         postType = "series";
