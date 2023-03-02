@@ -5,7 +5,9 @@ import helmet from "helmet";
 import mongoose from "mongoose";
 import logger from "morgan";
 import router from "./router";
+import ProcessEdit from "./edit";
 import ProcessAnimehay from "./services/animehay";
+import ProcessOPhim from "./services/ophim";
 import { ResponseError } from "./core/types";
 
 const app: Express = express();
@@ -25,7 +27,9 @@ mongoose
   .connect(MONGODB_URI || MONGODB_URL_LOCAL, {})
   .then(() => {
     console.log("✔️ Connected To Database Successfully!");
-    ProcessAnimehay();
+    // ProcessEdit();
+    // ProcessAnimehay();
+    ProcessOPhim();
   })
   .catch((err: Error) =>
     console.log(`❌ Failed To Connect To Database!\n ${err}`)
